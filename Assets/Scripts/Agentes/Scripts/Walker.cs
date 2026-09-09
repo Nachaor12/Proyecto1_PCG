@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 public class Walker : MonoBehaviour
 {
@@ -10,55 +11,48 @@ public class Walker : MonoBehaviour
     private int Nc;
 
     [SerializeField] private int Iterations;
-    [SerializeField] public GameObject prefab;
 
-    [SerializeField] private float prefabSize = 0.5f;
 
-    
-    private Vector2Int currentGridPos = Vector2Int.zero;
-    private HashSet<Vector2Int> spawnedGridPositions = new HashSet<Vector2Int>();
-
-    void Start()
+    public static HashSet<Vector2Int> GenerateMap(Vector2Int startPosition, ref int pc, int iterations)
     {
-        currentGridPos = new Vector2Int(
-            Mathf.RoundToInt(transform.position.x / prefabSize),
-            Mathf.RoundToInt(transform.position.y / prefabSize)
-        );
+        HashSet<Vector2Int> floorPositions = new HashSet<Vector2Int> { startPosition };
+        Vector2Int currentGridPos = startPosition;
 
-        GenerateMap();
-    }
+        int currentIterations = iterations;
 
-    void GenerateMap()
-    {
-        GeneratePrefabAtGrid(currentGridPos);
-
-        while (Iterations > 0)
+        while (currentIterations > 0)
         {
-            Nc = Random.Range(0, 100);
+            int nc = Random.Range(0, 100);
 
-            if (Nc < Pc)
+            if (nc < pc)
             {
-                Direction = Random.Range(1, 5);
+                int direction = Random.Range(1, 5);
                 int steps = Random.Range(3, 8);
 
-                MoveAndDrawPath(Direction, steps);
+                // Mueve al agente y genera el camino
+                currentGridPos = MoveAndDrawPath(currentGridPos, direction, steps, floorPositions);
 
-                Room_W = Random.Range(3, 8);
-                Room_H = Random.Range(3, 8);
-                GenerateRoom(Room_W, Room_H);
+                // Dimensiones aleatorias de la habitación
+                int roomW = Random.Range(3, 8);
+                int roomH = Random.Range(3, 8);
 
-                Pc = 0;
+                // Genera la habitación centrada en la posición actual
+                GenerateRoom(currentGridPos, roomW, roomH, floorPositions);
+
+                pc = 0; // Reinicia la probabilidad tras crear habitación
             }
             else
             {
-                Pc += 5;
+                pc += 5; // Incrementa la probabilidad si no creó habitación
             }
 
-            Iterations--;
+            currentIterations--;
         }
+
+        return floorPositions;
     }
 
-    void MoveAndDrawPath(int dir, int steps)
+    private static Vector2Int MoveAndDrawPath(Vector2Int startPos, int dir, int steps, HashSet<Vector2Int> floorPositions)
     {
         Vector2Int gridDirection = Vector2Int.zero;
 
@@ -70,44 +64,28 @@ public class Walker : MonoBehaviour
             case 4: gridDirection = Vector2Int.left; break;
         }
 
+        Vector2Int current = startPos;
         for (int i = 0; i < steps; i++)
         {
-            currentGridPos += gridDirection;
-            GeneratePrefabAtGrid(currentGridPos);
+            current += gridDirection;
+            floorPositions.Add(current);
         }
 
-        transform.position = new Vector3(currentGridPos.x * prefabSize, currentGridPos.y * prefabSize, transform.position.z);
+        return current;
     }
 
-    void GenerateRoom(int width, int height)
+    private static void GenerateRoom(Vector2Int centerPos, int width, int height, HashSet<Vector2Int> floorPositions)
     {
-        int startX = currentGridPos.x - (width / 2);
-        int startY = currentGridPos.y - (height / 2);
+        int startX = centerPos.x - (width / 2);
+        int startY = centerPos.y - (height / 2);
 
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
                 Vector2Int tileGridPos = new Vector2Int(startX + x, startY + y);
-                GeneratePrefabAtGrid(tileGridPos);
+                floorPositions.Add(tileGridPos);
             }
         }
-    }
-
-    private void GeneratePrefabAtGrid(Vector2Int gridPos)
-    {
-        if (!spawnedGridPositions.Contains(gridPos))
-        {
-            Vector3 worldPos = new Vector3(gridPos.x * prefabSize, gridPos.y * prefabSize, 0f);
-
-            Instantiate(prefab, worldPos, Quaternion.identity);
-            spawnedGridPositions.Add(gridPos);
-        }
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawCube(transform.position, new Vector3(prefabSize, prefabSize, prefabSize));
     }
 }
