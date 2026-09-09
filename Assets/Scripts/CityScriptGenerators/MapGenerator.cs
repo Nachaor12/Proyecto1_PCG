@@ -8,6 +8,7 @@ public class MapGenerator : MonoBehaviour
     [Header("Tilemap")]
     [SerializeField] private Tilemap RoadsTilemap;
     [SerializeField] private Tilemap SidewalkTilemap;
+    [SerializeField] private Tilemap BuildingsTilemap;
 
     [Header("Tiles")]
     [SerializeField] private Tile roadHorizontalCenterTile;
@@ -16,6 +17,11 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private Tile roadVerticalRightTile;
     [SerializeField] private Tile roadVerticalLeftTile;
     [SerializeField] private Tile sidewalkTile;
+
+    [Header("Tiles de Edificios (Según Altura del Noise)")]
+    [SerializeField] private Tile lowBuildingTile;    // P. ej., casas / zonas verdes (0.0 - 0.4)
+    [SerializeField] private Tile mediumBuildingTile; // P. ej., edificios medianos (0.4 - 0.7)
+    [SerializeField] private Tile highBuildingTile;   // P. ej., rascacielos (0.7 - 1.0)
 
     public void PaintRoadsTiles(IEnumerable<Vector2Int> roadsPosition)
     {
@@ -57,12 +63,6 @@ public class MapGenerator : MonoBehaviour
             Vector3Int tilePosition = new Vector3Int(position.x, position.y, 0);
             RoadsTilemap.SetTile(tilePosition, roadVerticalLeftTile);
         }
-
-        //HashSet<Vector2Int> TotalHorizontalRoads = new HashSet<Vector2Int>(roadsHorizontalUpPos);
-        //TotalHorizontalRoads.UnionWith(roadsHorizontalDownPos);
-
-        //HashSet<Vector2Int> TotalVerticalRoads = new HashSet<Vector2Int>(roadsVerticalRightPos);
-        //TotalVerticalRoads.UnionWith(roadsVerticalLeftPos);
 
         HashSet<Vector2Int> TotalExtraRoads = new HashSet<Vector2Int>(roadsHorizontalUpPos);
         TotalExtraRoads.UnionWith(roadsHorizontalDownPos);
@@ -119,6 +119,72 @@ public class MapGenerator : MonoBehaviour
         }
 
         return tilePosition;
+    }
+
+    public void PaintBuildings(HashSet<Vector2Int> occupiedPositions, float[,] noiseMap, Vector2Int boundsMin, int resolution)
+    {
+        HashSet<Vector2Int> buildingSpots = FindAvailableBuildingSpots(occupiedPositions);
+
+        foreach (var pos in buildingSpots)
+        {
+            // Mapeamos las coordenadas locales/del mapa al rango de la matriz del Noise
+            int noiseX = pos.x - boundsMin.x;
+            int noiseY = pos.y - boundsMin.y;
+
+            // Validación de límites del mapa de ruido
+            if (noiseX >= 0 && noiseX < resolution && noiseY >= 0 && noiseY < resolution)
+            {
+                float noiseValue = noiseMap[noiseY, noiseX];
+                Tile chosenTile = GetBuildingTileByNoise(noiseValue);
+
+                if (chosenTile != null)
+                {
+                    Vector3Int tilePosition = new Vector3Int(pos.x, pos.y, 0);
+                    BuildingsTilemap.SetTile(tilePosition, chosenTile);
+                }
+            }
+        }
+    }
+
+    // Encuentra casillas vacías contiguas a la ciudad
+    private HashSet<Vector2Int> FindAvailableBuildingSpots(HashSet<Vector2Int> occupiedPositions)
+    {
+        HashSet<Vector2Int> spots = new HashSet<Vector2Int>();
+        Vector2Int[] directions = {
+            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
+        };
+
+        foreach (var pos in occupiedPositions)
+        {
+            foreach (var dir in directions)
+            {
+                Vector2Int neighbor = pos + dir;
+                if (!occupiedPositions.Contains(neighbor))
+                {
+                    spots.Add(neighbor);
+                }
+            }
+        }
+
+        return spots;
+    }
+
+    // Selecciona la baldosa según el rango de altura devuelto por Value Noise
+    private Tile GetBuildingTileByNoise(float value)
+    {
+        if (value < 0.4f)
+            return lowBuildingTile;
+        else if (value < 0.7f)
+            return mediumBuildingTile;
+        else
+            return highBuildingTile;
+    }
+
+    public void ClearAllTilemaps()
+    {
+        if (RoadsTilemap != null) RoadsTilemap.ClearAllTiles();
+        if (SidewalkTilemap != null) SidewalkTilemap.ClearAllTiles();
+        if (BuildingsTilemap != null) BuildingsTilemap.ClearAllTiles();
     }
 
     public void ClearTilemaps()
