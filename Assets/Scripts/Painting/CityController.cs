@@ -29,7 +29,22 @@ public class CityController : MonoBehaviour
 
         var floorPositions = Walker.GenerateMap(Vector2Int.zero, ref Pc, iterations, limitesMinimos, limitesMaximos, minSteps, maxSteps, minRoomScale, maxRoomScale);
 
+        //visualizer.PaintRoadsTiles(floorPositions);
+        //visualizer.PaintExtraRoad(floorPositions);
+        //visualizer.PaintSidewalk(floorPositions);
+
+
+        // 1. Pintar carreteras centrales
         visualizer.PaintRoadsTiles(floorPositions);
-        visualizer.PaintWalls(floorPositions);
+
+        // 2. Pintar carreteras extra y guardar sus posiciones
+        HashSet<Vector2Int> extraRoads = visualizer.PaintExtraRoad(floorPositions);
+
+        // 3. Unir carreteras centrales y carreteras extra
+        HashSet<Vector2Int> totalRoads = new HashSet<Vector2Int>(floorPositions);
+        totalRoads.UnionWith(extraRoads);
+
+        // 4. Pintar aceras alrededor del bloque total de carreteras
+        visualizer.PaintSidewalk(totalRoads);
     }
 }

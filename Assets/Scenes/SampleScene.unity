@@ -595,8 +595,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   visualizer: {fileID: 1790608208}
   numberOfAgents: 10
-  walkLength: 200
+  iterations: 100
   Pc: 5
+  minSteps: 10
+  maxSteps: 100
+  minRoomScale: 4
+  maxRoomScale: 6
+  limitesMinimos: {x: -25, y: -25}
+  limitesMaximos: {x: 25, y: 25}
 --- !u!114 &1790608208
 MonoBehaviour:
   m_ObjectHideFlags: 0
