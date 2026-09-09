@@ -10,7 +10,7 @@ using UnityEngine;
 [CustomEditor(typeof(MissionGenerator))]
 public class MissionGeneratorEditor : Editor
 {
-    public override void OnInspectorGUI()
+    /*public override void OnInspectorGUI()
     {
         serializedObject.Update();
 
@@ -45,5 +45,5 @@ public class MissionGeneratorEditor : Editor
         {
             generator.GenerateMission();
         }
-    }
+    }*/
 }

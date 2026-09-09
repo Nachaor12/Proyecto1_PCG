@@ -8,9 +8,10 @@ public class MapGenerator : MonoBehaviour
     [Header("Tilemap")]
     [SerializeField] private Tilemap RoadsTilemap;
     [SerializeField] private Tilemap SidewalkTilemap;
-    [SerializeField] private Tilemap BuildingsTilemap;
+    [SerializeField] private Tilemap BuildingsTilemap; 
+    [SerializeField] private Tilemap MissionTilemap;
 
-    [Header("Tiles")]
+    [Header("Tiles de Calles")]
     [SerializeField] private Tile roadHorizontalCenterTile;
     [SerializeField] private Tile roadHorizontalUpTile;
     [SerializeField] private Tile roadHorizontalDownTile;
@@ -19,13 +20,24 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private Tile sidewalkTile;
 
     [Header("Tiles de Edificios (Según Altura del Noise)")]
-    [SerializeField] private Tile lowBuildingTile;    // P. ej., casas / zonas verdes (0.0 - 0.4)
-    [SerializeField] private Tile mediumBuildingTile; // P. ej., edificios medianos (0.4 - 0.7)
-    [SerializeField] private Tile highBuildingTile;   // P. ej., rascacielos (0.7 - 1.0)
+    [SerializeField] private Tile lowBuildingTile;
+    [SerializeField] private Tile mediumBuildingTile;
+    [SerializeField] private Tile highBuildingTile;
+
+
+    [Header("Tiles de Misión ")]
+    [SerializeField] private Tile startTile;    // 'S'
+    [SerializeField] private Tile cTile;   // 'C'
+    [SerializeField] private Tile eTile;  // 'E'
+    [SerializeField] private Tile rTile; // 'R'
+    [SerializeField] private Tile kTile;      // 'K'
+    [SerializeField] private Tile lTile;     // 'L'
+    [SerializeField] private Tile goalTile;     // 'G'
+
 
     public void PaintRoadsTiles(IEnumerable<Vector2Int> roadsPosition)
     {
-        ClearTilemaps();
+        //ClearTilemaps();
         foreach (var road in roadsPosition) 
         {
             Vector3Int tilePosition = new Vector3Int(road.x, road.y, 0);
@@ -121,17 +133,17 @@ public class MapGenerator : MonoBehaviour
         return tilePosition;
     }
 
-    public void PaintBuildings(HashSet<Vector2Int> occupiedPositions, float[,] noiseMap, Vector2Int boundsMin, int resolution)
+    /*public void PaintBuildings(HashSet<Vector2Int> occupiedPositions, float[,] noiseMap, Vector2Int boundsMin, int resolution, int buildingDepth)
     {
-        HashSet<Vector2Int> buildingSpots = FindAvailableBuildingSpots(occupiedPositions);
+        // 1. Encuentra las posiciones vacías expandiéndose varias casillas hacia afuera
+        HashSet<Vector2Int> buildingSpots = FindAvailableBuildingSpots(occupiedPositions, buildingDepth);
 
+        // 2. Asigna la baldosa correspondiente según el Value Noise para cada casilla del bloque
         foreach (var pos in buildingSpots)
         {
-            // Mapeamos las coordenadas locales/del mapa al rango de la matriz del Noise
             int noiseX = pos.x - boundsMin.x;
             int noiseY = pos.y - boundsMin.y;
 
-            // Validación de límites del mapa de ruido
             if (noiseX >= 0 && noiseX < resolution && noiseY >= 0 && noiseY < resolution)
             {
                 float noiseValue = noiseMap[noiseY, noiseX];
@@ -144,32 +156,39 @@ public class MapGenerator : MonoBehaviour
                 }
             }
         }
-    }
+    }*/
 
-    // Encuentra casillas vacías contiguas a la ciudad
-    private HashSet<Vector2Int> FindAvailableBuildingSpots(HashSet<Vector2Int> occupiedPositions)
+    public void PaintBuildings(HashSet<Vector2Int> occupiedPositions, float[,] noiseMap, Vector2Int boundsMin, Vector2Int boundsMax, int resolution)
     {
-        HashSet<Vector2Int> spots = new HashSet<Vector2Int>();
-        Vector2Int[] directions = {
-            Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right
-        };
-
-        foreach (var pos in occupiedPositions)
+        // Recorremos todo el rango del mapa definido por los límites
+        for (int x = boundsMin.x; x <= boundsMax.x; x++)
         {
-            foreach (var dir in directions)
+            for (int y = boundsMin.y; y <= boundsMax.y; y++)
             {
-                Vector2Int neighbor = pos + dir;
-                if (!occupiedPositions.Contains(neighbor))
+                Vector2Int currentPos = new Vector2Int(x, y);
+
+                // Si la posición NO está ocupada por carretera ni acera, colocamos un edificio
+                if (!occupiedPositions.Contains(currentPos))
                 {
-                    spots.Add(neighbor);
+                    int noiseX = x - boundsMin.x;
+                    int noiseY = y - boundsMin.y;
+
+                    if (noiseX >= 0 && noiseX < resolution && noiseY >= 0 && noiseY < resolution)
+                    {
+                        float noiseValue = noiseMap[noiseY, noiseX];
+                        Tile chosenTile = GetBuildingTileByNoise(noiseValue);
+
+                        if (chosenTile != null)
+                        {
+                            Vector3Int tilePosition = new Vector3Int(x, y, 0);
+                            BuildingsTilemap.SetTile(tilePosition, chosenTile);
+                        }
+                    }
                 }
             }
         }
-
-        return spots;
     }
 
-    // Selecciona la baldosa según el rango de altura devuelto por Value Noise
     private Tile GetBuildingTileByNoise(float value)
     {
         if (value < 0.4f)
@@ -185,11 +204,53 @@ public class MapGenerator : MonoBehaviour
         if (RoadsTilemap != null) RoadsTilemap.ClearAllTiles();
         if (SidewalkTilemap != null) SidewalkTilemap.ClearAllTiles();
         if (BuildingsTilemap != null) BuildingsTilemap.ClearAllTiles();
+        if (MissionTilemap != null) MissionTilemap.ClearAllTiles();
     }
 
-    public void ClearTilemaps()
+    // Selecciona la baldosa según el rango de altura devuelto por Value Noise
+    /*public void ClearTilemaps()
     {
         RoadsTilemap.ClearAllTiles();
         SidewalkTilemap.ClearAllTiles();
+    }*/
+
+
+    public void PaintMissionObjectives(List<MissionGenerator.MissionObjective> objectives)
+    {
+        if (MissionTilemap == null) return;
+        MissionTilemap.ClearAllTiles();
+
+        foreach (var obj in objectives)
+        {
+            Tile chosenTile = GetMissionTileBySymbol(obj.symbol);
+
+            if (chosenTile != null)
+            {
+                Vector3Int tilePos = new Vector3Int(obj.position.x, obj.position.y, 0);
+                MissionTilemap.SetTile(tilePos, chosenTile);
+            }
+            else
+            {
+                Debug.LogWarning($"[MapGenerator] No hay una Tile asignada para el símbolo '{obj.symbol}'");
+            }
+        }
     }
+
+    private Tile GetMissionTileBySymbol(char symbol)
+    {
+        switch (symbol)
+        {
+            case 'S': return startTile;
+            case 'C': return cTile;
+            case 'E': return eTile;
+            case 'R': return rTile;
+            case 'K': return kTile;
+            case 'L': return lTile;
+            case 'G': return goalTile;
+            default: return null;
+        }
+    }
+
+
+
 }
