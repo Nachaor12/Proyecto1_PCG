@@ -29,11 +29,15 @@ public class CityController : MonoBehaviour
     [Header("Configuración de Edificios")]
     [SerializeField] private int buildingDepth = 3;
 
+    [Header("Player Settings")]
+    [SerializeField] private PlayerController playerPrefab;
+    private PlayerController activePlayer;
 
     [ContextMenu("Generate City")]
 
     private void Start()
     {
+        //SetIterations(999);
         RunProceduralGeneration();
     }
 
@@ -41,14 +45,14 @@ public class CityController : MonoBehaviour
     {
         visualizer.ClearAllTilemaps();
 
-        // 1. Generar caminos
+        // Generar caminos
         var floorPositions = Walker.GenerateMap(
             Vector2Int.zero, ref Pc, iterations,
             limitesMinimos, limitesMaximos,
             minSteps, maxSteps, minRoomScale, maxRoomScale
         );
 
-        // 2. Pintar vías y aceras
+        // Pintar vías y aceras
         visualizer.PaintRoadsTiles(floorPositions);
         HashSet<Vector2Int> extraRoads = visualizer.PaintExtraRoad(floorPositions);
 
@@ -57,19 +61,19 @@ public class CityController : MonoBehaviour
 
         visualizer.PaintSidewalk(totalRoads);
 
-        // 3. Registrar todo el espacio ocupado por calles y aceras
+        // Registrar todo el espacio ocupado por calles y aceras
         HashSet<Vector2Int> sidewalkPositions = visualizer.FindExtraRoadsInDirections(totalRoads);
         HashSet<Vector2Int> totalOccupiedSpace = new HashSet<Vector2Int>(totalRoads);
         totalOccupiedSpace.UnionWith(sidewalkPositions);
 
-        // 4. Calcular Value Noise
+        // Calcular Value Noise
         int resolution = (limitesMaximos.x - limitesMinimos.x) + 1;
         float[,] noiseMap = ValueNoise.GenerateValueNoiseMap(resolution, latticeSpacing, seed, mode);
 
-        // 5. Rellenar TODO el mapa sobrante con edificios usando los límites
+        // Rellenar TODO el mapa sobrante con edificios usando los límites
         visualizer.PaintBuildings(totalOccupiedSpace, noiseMap, limitesMinimos, limitesMaximos, resolution);
 
-        // 4. Integrar la Gramática de Misiones sobre las Aceras
+        // Integrar la Gramática de Misiones sobre las Aceras
         if (missionGen != null)
         {
             string missionStr = missionGen.GenerateMissionString();
@@ -77,6 +81,39 @@ public class CityController : MonoBehaviour
 
             // Pinta cada tarea con su Tile específica según el switch
             visualizer.PaintMissionObjectives(objectives);
+        }
+
+        // Instanciar e inicializar al Jugador
+        if (playerPrefab != null && totalOccupiedSpace.Count > 0)
+        {
+            // Tomamos una posición válida al azar (o la primera que haya) como punto de inicio
+            var enumerator = totalOccupiedSpace.GetEnumerator();
+            enumerator.MoveNext();
+            Vector2Int startPos = enumerator.Current;
+
+            // Si quieres que empiece exactamente en (0,0), puedes verificar si está en la lista:
+            // if (totalOccupiedSpace.Contains(Vector2Int.zero)) startPos = Vector2Int.zero;
+
+            if (activePlayer == null)
+            {
+                activePlayer = Instantiate(playerPrefab);
+            }
+
+            activePlayer.Initialize(startPos, totalOccupiedSpace);
+        }
+
+        Camera.main.GetComponent<CameraFollow>().target = activePlayer.transform;
+    }
+
+    // UI
+    public void SetIterations(float value) { iterations = (int)value; }
+    public void SetMinSteps(float value) { minSteps = (int)value; }
+    public void SetMaxSteps(float value) { maxSteps = (int)value; }
+    public void SetSeed(string value)
+    {
+        if (int.TryParse(value, out int parsedSeed))
+        {
+            seed = parsedSeed;
         }
     }
 }
