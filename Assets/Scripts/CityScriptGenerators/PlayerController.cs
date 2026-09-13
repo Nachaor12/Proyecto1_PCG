@@ -1,10 +1,16 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
     private HashSet<Vector2Int> validTiles;
     private Vector2Int currentGridPosition;
+
+    ///Variables de movimiento
+    [SerializeField] private float velocity = 5;
+    private float MovePlayerAxisH = 1;
+    private float MovePlayerAxisV = 0;
 
     // Inicializa el jugador con su posición inicial y las rutas permitidas
     public void Initialize(Vector2Int startPos, HashSet<Vector2Int> walkableTiles)
@@ -20,10 +26,14 @@ public class PlayerController : MonoBehaviour
         if (MenuUI.isPaused) return;
 
         // Movimiento por la grilla usando las flechas o WASD
-        if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) TryMove(Vector2Int.up);
+        /*if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) TryMove(Vector2Int.up);
         else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) TryMove(Vector2Int.down);
         else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) TryMove(Vector2Int.left);
-        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) TryMove(Vector2Int.right);
+        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) TryMove(Vector2Int.right);*/
+
+
+        SecondMovementHorizontal(MovePlayerAxisH);
+        SecondMovementVertical(MovePlayerAxisV);
     }
 
     private void TryMove(Vector2Int direction)
@@ -43,5 +53,25 @@ public class PlayerController : MonoBehaviour
         // Actualiza el Transform del GameObject para alinearse con la grilla de Unity
         transform.position = new Vector3(currentGridPosition.x + 0.5f, 
             currentGridPosition.y + 0.5f, 0f);
+    }
+
+    private void SecondMovementHorizontal(float movementH)
+    {
+        //Variabales de detección de dirección
+        movementH = Input.GetAxisRaw("Horizontal");
+
+        //Aplica movimiento 
+        Vector2 Movement = new Vector2(movementH * velocity * Time.deltaTime, 0);
+        transform.Translate(Movement);
+    }
+
+    private void SecondMovementVertical(float movementV)
+    {
+        //Variabales de detección de dirección
+        movementV = Input.GetAxisRaw("Vertical");
+
+        //Aplica movimiento 
+        Vector2 Movement = new Vector2(0, movementV * velocity * Time.deltaTime);
+        transform.Translate(Movement);
     }
 }

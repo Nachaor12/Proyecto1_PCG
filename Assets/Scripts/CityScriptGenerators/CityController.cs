@@ -72,6 +72,9 @@ public class CityController : MonoBehaviour
 
         // Rellenar TODO el mapa sobrante con edificios usando los límites
         visualizer.PaintBuildings(totalOccupiedSpace, noiseMap, limitesMinimos, limitesMaximos, resolution);
+        
+        // Nuevo visualizer para dibujar edificios, quitar el de arriba 
+        //visualizer.GenerateAndPaintBuildings(totalOccupiedSpace, noiseMap, limitesMinimos, limitesMaximos, resolution);
 
         // Integrar la Gramática de Misiones sobre las Aceras
         if (missionGen != null)

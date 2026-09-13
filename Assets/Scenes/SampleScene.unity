@@ -1388,9 +1388,19 @@ MonoBehaviour:
   roadVerticalRightTile: {fileID: 11400000, guid: 2fa871196d3949645b90e4725479b74e, type: 2}
   roadVerticalLeftTile: {fileID: 11400000, guid: 13f6ec449ed470e498ae55a613e7de37, type: 2}
   sidewalkTile: {fileID: 11400000, guid: c9b6e127a3efae347983ba81ce432546, type: 2}
-  lowBuildingTile: {fileID: 11400000, guid: be3fdf61cbe01a148819ceae069f83db, type: 2}
-  mediumBuildingTile: {fileID: 11400000, guid: 78bdc8920d7f47b4ea06a83bdd22258e, type: 2}
-  highBuildingTile: {fileID: 11400000, guid: 7fd002a696b796b43a31eddab48553ff, type: 2}
+  lowTerrainTile: {fileID: 11400000, guid: a048d34bcf6c0be4389c6991f85aa910, type: 2}
+  mediumTerrainTile: {fileID: 11400000, guid: be3fdf61cbe01a148819ceae069f83db, type: 2}
+  highTerrainTile: {fileID: 11400000, guid: 17b00a0e4c9cfb343934e1d1fdaa79ec, type: 2}
+  leftBorderBuilding: {fileID: 11400000, guid: 70e9cdae28f910742b0b3d3b25c4b3c2, type: 2}
+  rightBorderBuilding: {fileID: 11400000, guid: c27a692a31b58164d8fb8697c6ee3fa8, type: 2}
+  topBorderRoof: {fileID: 11400000, guid: ddec1e2c1aca4bd4eaa1064a921d4a46, type: 2}
+  downBorderRoof: {fileID: 11400000, guid: a35f3eef8cb192745af01a2c968eb8a9, type: 2}
+  leftBorderRoof: {fileID: 11400000, guid: 2fb0d4be22c0f534ab47ebbb8b92b31b, type: 2}
+  rightBorderRoof: {fileID: 11400000, guid: ce89e737b9d5e7841942e1945942f4b2, type: 2}
+  wallBuilding: {fileID: 11400000, guid: fd18a4494c33ea54195a8752b4d19015, type: 2}
+  roofBuilding: {fileID: 11400000, guid: 2bb9365c51601d74e9b1ccf7d3ea92b4, type: 2}
+  doorBuilding: {fileID: 11400000, guid: f6d2ffa2ed490844d8a44c08d511deb7, type: 2}
+  windowsBuilding: {fileID: 11400000, guid: ef3273e83db45204bbafedc9430df89a, type: 2}
   startTile: {fileID: 11400000, guid: a7b19e45e167e434d93249e105f248b6, type: 2}
   cTile: {fileID: 11400000, guid: 79bbfaac6fbb3fc4abc9bd34fc451fef, type: 2}
   eTile: {fileID: 11400000, guid: 44592978c4edc1d4f8b91647aa771a2f, type: 2}
