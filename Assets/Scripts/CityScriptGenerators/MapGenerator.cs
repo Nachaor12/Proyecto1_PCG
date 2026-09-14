@@ -276,18 +276,6 @@ public class MapGenerator : MonoBehaviour
         return BuildingHeight.HighDensity;
     }
 
-    // Opcional: Define cuántas tiles mide la base según la altura
-    /*private Vector2Int GetBuildingSizeByHeight(BuildingHeight height)
-    {
-        switch (height)
-        {
-            case BuildingHeight.HighDensity: return new Vector2Int(2, 2); // Rascacielos ocupan 2x2
-            case BuildingHeight.MediumDensity: return new Vector2Int(2, 1); // Comercios/Oficinas 2x1
-            case BuildingHeight.LowDensity: return new Vector2Int(1, 1); // Casas 1x1
-            default: return new Vector2Int(1, 1);
-        }
-    }*/
-
     private Vector2Int GetBuildingSizeByHeight(BuildingHeight height)
     {
         switch (height)

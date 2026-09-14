@@ -53,6 +53,11 @@ public class CityController : MonoBehaviour
     {
         visualizer.ClearAllTilemaps();
 
+        // Inicializar la semilla 
+        Random.InitState(seed);
+
+        if (missionGen != null) missionGen.seed = seed;
+
         if (currentContext == GenerationContext.City)
         {
             GenerateCity();
@@ -88,6 +93,15 @@ public class CityController : MonoBehaviour
 
         // Calcular Value Noise
         int resolution = (limitesMaximos.x - limitesMinimos.x) + 1;
+
+        int maxLatticeSpacing = Mathf.Max(1, resolution - 1);
+
+        if (latticeSpacing > maxLatticeSpacing)
+        {
+            latticeSpacing = maxLatticeSpacing;
+            Debug.LogWarning("El Lattice Spacing era demasiado alto. Se ha ajustado automáticamente a: " + latticeSpacing);
+        }
+
         float[,] noiseMap = ValueNoise.GenerateValueNoiseMap(resolution, latticeSpacing, seed, mode);
 
         // Rellenar el mapa sobrante con edificios usando los límites
@@ -183,5 +197,29 @@ public class CityController : MonoBehaviour
         {
             seed = parsedSeed;
         }
+    }
+    public void SetContext(int contextIndex)
+    {
+        currentContext = (GenerationContext)contextIndex;
+    }
+    public void SetMinRoomScale(float value) { minRoomScale = (int)value; }
+    public void SetMaxRoomScale(float value) { maxRoomScale = (int)value; }
+    public void SetMapSize(float size)
+    {
+        int intSize = (int)Mathf.Abs(size);
+        limitesMinimos = new Vector2Int(-intSize, -intSize);
+        limitesMaximos = new Vector2Int(intSize, intSize);
+    }
+    public void SetLatticeSpacing(float value)
+    {
+        latticeSpacing = Mathf.Max(1, (int)value);
+    }
+    public void SetInterpolationMode(int modeIndex)
+    {
+        mode = (InterpolationMode)modeIndex;
+    }
+    public void SetBuildingDepth(float value)
+    {
+        buildingDepth = (int)value;
     }
 }

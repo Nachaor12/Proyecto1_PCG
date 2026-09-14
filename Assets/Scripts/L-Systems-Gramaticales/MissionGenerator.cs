@@ -20,7 +20,7 @@ public class MissionGenerator : MonoBehaviour
     }
 
     [Header("Generation")]
-    [SerializeField] private int seed = 12345;
+    [SerializeField] public int seed = 12345;
     [Range(1, 10)][SerializeField] private int expansionSteps = 4;
 
     [Header("City Grammar")]
