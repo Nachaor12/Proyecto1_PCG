@@ -47,6 +47,15 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private Tile lTile;        // 'L'
     [SerializeField] private Tile goalTile;     // 'G'
 
+    [Header("Tiles de Restaurante")]
+    [SerializeField] private Tile restaurantFloorTile;
+    [SerializeField] private Tile restaurantWallTile;
+    [SerializeField] private Tile restaurantTableTile;
+    [SerializeField] private Tile restaurantKitchenTile;
+    [SerializeField] private Tile restaurantChairTile;
+    [SerializeField] private Tile restauranDecoTile;
+
+
     //Para los edificios
     public enum BuildingHeight
     {
@@ -222,7 +231,7 @@ public class MapGenerator : MonoBehaviour
         if (MissionTilemap != null) MissionTilemap.ClearAllTiles();
     }
 
-    // 2. Método auxiliar que pinta las tiles de un edificio según su posición, tamaño y altura
+    // Método auxiliar que pinta las tiles de un edificio según su posición, tamaño y altura
     private void PaintSingleBuilding(BuildingPlacementData building)
     {
         // Elegimos la tile según la altura definida
@@ -247,7 +256,7 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
-    // 3. Mapea el enum BuildingHeight a las Tiles configuradas en el Inspector
+    // Mapea el enum BuildingHeight a las Tiles configuradas en el Inspector
     private Tile GetTileByHeight(BuildingHeight height)
     {
         switch (height)
@@ -377,23 +386,23 @@ public class MapGenerator : MonoBehaviour
                 {
                     float noiseValue = noiseMap[noiseY, noiseX];
 
-                    // A) Determinar Altura/Densidad por ruido
+                    // Determinar Altura/Densidad por ruido
 
                     BuildingHeight height = GetBuildingHeightByNoise(noiseValue);
                     if (height == BuildingHeight.None) continue;
 
-                    // B) Determinar Tamaño según la altura
+                    // Determinar Tamaño según la altura
                     Vector2Int buildingSize = GetBuildingSizeByHeight(height);
 
-                    // C) Validar que todo el bloque (size.x * size.y) esté libre
+                    // Validar que todo el bloque (size.x * size.y) esté libre
                     if (CanPlaceBuilding(currentPos, buildingSize, occupiedPositions, boundsMin, boundsMax))
                     {
-                        // D) Generar variables aleatorias
+                        // Generar variables aleatorias
                         BuildingType randomType = GetRandomBuildingType(height);
                         string randomColor = availableColors[Random.Range(0, availableColors.Length)];
                         string randomSide = availableSides[Random.Range(0, availableSides.Length)];
 
-                        // E) Crear la estructura de datos
+                        // Crear la estructura de datos
                         BuildingPlacementData newBuilding = new BuildingPlacementData
                         {
                             position = currentPos,
@@ -405,7 +414,7 @@ public class MapGenerator : MonoBehaviour
                         };
                         buildingsList.Add(newBuilding);
 
-                        // F) Bloquear todas las celdas de este edificio en occupiedPositions
+                        // Bloquear todas las celdas de este edificio en occupiedPositions
                         MarkAreaAsOccupied(currentPos, buildingSize, occupiedPositions);
                     }
                 }
@@ -435,7 +444,7 @@ public class MapGenerator : MonoBehaviour
                 bool isLeftEdge = (x == 0);
                 bool isRightEdge = (x == width - 1);
 
-                // --- CAPA DE TECHO (Filas superiores) ---
+                // Capa de techo (Filas superiores) 
                 if (y >= wallHeight)
                 {
                     bool isRoofBottom = (y == wallHeight);
@@ -519,6 +528,7 @@ public class MapGenerator : MonoBehaviour
     {
         switch (symbol)
         {
+            // Objetivos de Ciudad
             case 'S': return startTile;
             case 'C': return cTile;
             case 'E': return eTile;
@@ -526,7 +536,76 @@ public class MapGenerator : MonoBehaviour
             case 'K': return kTile;
             case 'L': return lTile;
             case 'G': return goalTile;
+
+            // Objetos de Restaurante 
+            case 'M': return restaurantTableTile;   // M = Mesa
+            case 'O': return restaurantKitchenTile; // O = Cocina 
+            case 'H': return restaurantChairTile; // H = Silla 
+            case 'D': return restauranDecoTile; // D = Decoracion
+
             default: return null;
         }
+    }
+
+    // Funciones para contexto de restaurante (interiores)
+
+    public void PaintRestaurantFloor(HashSet<Vector2Int> floorPositions)
+    {
+        foreach (var pos in floorPositions)
+        {
+            Vector3Int tilePosition = new Vector3Int(pos.x, pos.y, 0);
+            RoadsTilemap.SetTile(tilePosition, restaurantFloorTile); // Usamos RoadsTilemap para el suelo base
+        }
+    }
+
+    public void PaintRestaurantWalls(HashSet<Vector2Int> wallPositions)
+    {
+        foreach (var pos in wallPositions)
+        {
+            Vector3Int tilePosition = new Vector3Int(pos.x, pos.y, 0);
+            // Pintamos las paredes en el Tilemap de edificios para que colisionen correctamente
+            BuildingsTilemap.SetTile(tilePosition, restaurantWallTile);
+        }
+    }
+
+    public void GenerateAndPaintRestaurantProps(HashSet<Vector2Int> occupiedPositions, float[,] noiseMap, Vector2Int boundsMin, Vector2Int boundsMax, int resolution)
+    {
+        for (int x = boundsMin.x; x <= boundsMax.x; x++)
+        {
+            for (int y = boundsMin.y; y <= boundsMax.y; y++)
+            {
+                Vector2Int currentPos = new Vector2Int(x, y);
+
+                // Si no es un pasillo, colocamos paredes o muebles
+                if (!occupiedPositions.Contains(currentPos))
+                {
+                    int noiseX = x - boundsMin.x;
+                    int noiseY = y - boundsMin.y;
+
+                    if (noiseX >= 0 && noiseX < resolution && noiseY >= 0 && noiseY < resolution)
+                    {
+                        float noiseValue = noiseMap[noiseY, noiseX];
+                        Tile chosenTile = GetRestaurantPropByNoise(noiseValue);
+
+                        if (chosenTile != null)
+                        {
+                            Vector3Int tilePosition = new Vector3Int(x, y, 0);
+                            BuildingsTilemap.SetTile(tilePosition, chosenTile); // Usamos BuildingsTilemap para los obstáculos/mesas
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private Tile GetRestaurantPropByNoise(float noiseValue)
+    {
+        // Distribución basada en ruido para agrupar elementos lógicamente
+        if (noiseValue < 0.35f)
+            return restaurantTableTile; // Zonas de baja densidad (Mesas para clientes)
+        else if (noiseValue < 0.65f)
+            return restaurantWallTile;  // Zonas de densidad media (Paredes/Divisiones interiores)
+        else
+            return restaurantKitchenTile; // Zonas de alta densidad (Área de cocina/bar)
     }
 }

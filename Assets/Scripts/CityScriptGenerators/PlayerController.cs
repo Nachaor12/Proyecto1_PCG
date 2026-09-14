@@ -25,11 +25,7 @@ public class PlayerController : MonoBehaviour
         // Si el juego está en pausa, no procesar movimiento
         if (MenuUI.isPaused) return;
 
-        // Movimiento por la grilla usando las flechas o WASD
-        /*if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.W)) TryMove(Vector2Int.up);
-        else if (Input.GetKeyDown(KeyCode.DownArrow) || Input.GetKeyDown(KeyCode.S)) TryMove(Vector2Int.down);
-        else if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.A)) TryMove(Vector2Int.left);
-        else if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.D)) TryMove(Vector2Int.right);*/
+        
 
 
         SecondMovementHorizontal(MovePlayerAxisH);

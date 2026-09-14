@@ -4,6 +4,15 @@ using UnityEngine;
 
 public class CityController : MonoBehaviour
 {
+    public enum GenerationContext
+    {
+        City,
+        Restaurant
+    }
+
+    [Header("Contexto de Generación")]
+    [SerializeField] private GenerationContext currentContext = GenerationContext.City;
+
     [Header("Generators")]
     [SerializeField] private MapGenerator visualizer;
     [SerializeField] private MissionGenerator missionGen;
@@ -21,19 +30,18 @@ public class CityController : MonoBehaviour
     [SerializeField] private Vector2Int limitesMaximos = new Vector2Int(25, 25);
 
     [Header("Value Noise")]
-    //[Header("Configuración de Value Noise")]
     [SerializeField] private int seed = 12345;
     [SerializeField] private int latticeSpacing = 5;
     [SerializeField] private InterpolationMode mode = InterpolationMode.Bicubic;
 
-    [Header("Configuración de Edificios")]
+    [Header("Configuración de Edificios / Entorno")]
     [SerializeField] private int buildingDepth = 3;
 
     [Header("Player Settings")]
     [SerializeField] private PlayerController playerPrefab;
     private PlayerController activePlayer;
 
-    [ContextMenu("Generate City")]
+    [ContextMenu("Generate Environment")]
 
     private void Start()
     {
@@ -45,6 +53,18 @@ public class CityController : MonoBehaviour
     {
         visualizer.ClearAllTilemaps();
 
+        if (currentContext == GenerationContext.City)
+        {
+            GenerateCity();
+        }
+        else if (currentContext == GenerationContext.Restaurant)
+        {
+            GenerateRestaurant();
+        }
+    }
+
+    public void GenerateCity()
+    {
         // Generar caminos
         var floorPositions = Walker.GenerateMap(
             Vector2Int.zero, ref Pc, iterations,
@@ -72,40 +92,85 @@ public class CityController : MonoBehaviour
 
         // Rellenar TODO el mapa sobrante con edificios usando los límites
         visualizer.PaintBuildings(totalOccupiedSpace, noiseMap, limitesMinimos, limitesMaximos, resolution);
-        
+
         // Nuevo visualizer para dibujar edificios, quitar el de arriba 
-        //visualizer.GenerateAndPaintBuildings(totalOccupiedSpace, noiseMap, limitesMinimos, limitesMaximos, resolution);
+        visualizer.GenerateAndPaintBuildings(totalOccupiedSpace, noiseMap, limitesMinimos, limitesMaximos, resolution);
 
         // Integrar la Gramática de Misiones sobre las Aceras
         if (missionGen != null)
         {
-            string missionStr = missionGen.GenerateMissionString();
-            var objectives = missionGen.AssignObjectivesToSidewalks(missionStr, sidewalkPositions);
+            string missionStr = missionGen.GenerateMissionString(MissionGenerator.MissionContext.City);
+            var objectives = missionGen.AssignObjectivesToPositions(missionStr, sidewalkPositions);
 
             // Pinta cada tarea con su Tile específica según el switch
             visualizer.PaintMissionObjectives(objectives);
         }
 
-        // Instanciar e inicializar al Jugador
-        if (playerPrefab != null && totalOccupiedSpace.Count > 0)
+        SpawnPlayer(totalOccupiedSpace);
+    }
+
+    private void GenerateRestaurant()
+    {
+        //Generar el suelo (equivalente a las calles principales)
+        var floorPositions = Walker.GenerateMap(
+            Vector2Int.zero, ref Pc, iterations,
+            limitesMinimos, limitesMaximos,
+            minSteps, maxSteps, minRoomScale, maxRoomScale
+        );
+
+        // Generar las paredes bordeando el suelo (equivalente a cómo buscabas aceras)
+        HashSet<Vector2Int> wallPositions = visualizer.FindExtraRoadsInDirections(floorPositions);
+
+        // Generar paredes en el perímetro absoluto para asegurar 
+        // que el interior quede totalmente encerrado en los límites máximos de la grilla.
+        for (int x = limitesMinimos.x - 1; x <= limitesMaximos.x + 1; x++)
         {
-            // Tomamos una posición válida al azar (o la primera que haya) como punto de inicio
-            var enumerator = totalOccupiedSpace.GetEnumerator();
+            wallPositions.Add(new Vector2Int(x, limitesMinimos.y - 1));
+            wallPositions.Add(new Vector2Int(x, limitesMaximos.y + 1));
+        }
+        for (int y = limitesMinimos.y - 1; y <= limitesMaximos.y + 1; y++)
+        {
+            wallPositions.Add(new Vector2Int(limitesMinimos.x - 1, y));
+            wallPositions.Add(new Vector2Int(limitesMaximos.x + 1, y));
+        }
+
+        // Aseguramos que ninguna pared reemplace un área de suelo transitable
+        wallPositions.ExceptWith(floorPositions);
+
+        //Pintar Suelos y Paredes
+        visualizer.PaintRestaurantFloor(floorPositions);
+        visualizer.PaintRestaurantWalls(wallPositions);
+
+        // Distribuir Mesas y Cocinas usando el Mission Generator sobre el suelo
+        if (missionGen != null)
+        {
+            string restaurantPropsString = missionGen.GenerateMissionString(MissionGenerator.MissionContext.Restaurant);
+            var propObjectives = missionGen.AssignObjectivesToPositions(restaurantPropsString, floorPositions);
+            visualizer.PaintMissionObjectives(propObjectives);
+        }
+
+        // Instanciar al jugador en una casilla válida del suelo
+        SpawnPlayer(floorPositions);
+    }
+
+    private void SpawnPlayer(HashSet<Vector2Int> validSpace)
+    {
+        if (playerPrefab != null && validSpace.Count > 0)
+        {
+            var enumerator = validSpace.GetEnumerator();
             enumerator.MoveNext();
             Vector2Int startPos = enumerator.Current;
-
-            // Si quieres que empiece exactamente en (0,0), puedes verificar si está en la lista:
-            // if (totalOccupiedSpace.Contains(Vector2Int.zero)) startPos = Vector2Int.zero;
 
             if (activePlayer == null)
             {
                 activePlayer = Instantiate(playerPrefab);
             }
 
-            activePlayer.Initialize(startPos, totalOccupiedSpace);
-        }
+            activePlayer.Initialize(startPos, validSpace);
 
-        Camera.main.GetComponent<CameraFollow>().target = activePlayer.transform;
+            if (Camera.main.GetComponent<CameraFollow>() != null)
+                Camera.main.GetComponent<CameraFollow>().target = activePlayer.transform;
+        }
     }
 
     // UI

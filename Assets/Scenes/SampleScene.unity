@@ -1350,6 +1350,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7198262d7ad44f04d804c084491dd9b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  currentContext: 1
   visualizer: {fileID: 1790608208}
   missionGen: {fileID: 1790608209}
   numberOfAgents: 1
@@ -1408,6 +1409,12 @@ MonoBehaviour:
   kTile: {fileID: 11400000, guid: f975ec1d9a9804c4ca2695b92891ae7f, type: 2}
   lTile: {fileID: 11400000, guid: c4f350df216236c408a16f24603f8cf5, type: 2}
   goalTile: {fileID: 11400000, guid: 6455b86d3a1ccc74f8ca97cea87a4db4, type: 2}
+  restaurantFloorTile: {fileID: 11400000, guid: b47a50d7a0f85524fbc1bd4b45ffcd36, type: 2}
+  restaurantWallTile: {fileID: 11400000, guid: 8e4d35c75db0a89448559c564d9e7808, type: 2}
+  restaurantTableTile: {fileID: 11400000, guid: 1445587b2aaf3d04ca9712452c2fbcb9, type: 2}
+  restaurantKitchenTile: {fileID: 11400000, guid: a403f5153bea44c418f437c3f4b2d68b, type: 2}
+  restaurantChairTile: {fileID: 11400000, guid: 06ad90b6890d83140a512c44c4007581, type: 2}
+  restauranDecoTile: {fileID: 11400000, guid: 67ef4fb0b320cab4eb91137222c016ae, type: 2}
 --- !u!114 &1790608209
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1422,15 +1429,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   seed: 67
   expansionSteps: 4
-  startSymbol: M
-  startProduction: STG
-  taskSymbol: T
-  taskProductions:
+  cityStartProduction: STG
+  cityTaskSymbol: T
+  cityTaskProductions:
   - CT
   - ET
   - RT
   - KTL
-  terminalProduction: C
+  cityTerminalProduction: C
+  restStartProduction: OMT
+  restTaskSymbol: T
+  restTaskProductions:
+  - MMT
+  - MHT
+  - DT
+  restTerminalProduction: M
 --- !u!1 &1792964603
 GameObject:
   m_ObjectHideFlags: 0
