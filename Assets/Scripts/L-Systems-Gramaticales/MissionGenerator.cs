@@ -30,7 +30,6 @@ public class MissionGenerator : MonoBehaviour
     [SerializeField] private string cityTerminalProduction = "C";
 
     [Header("Restaurant Grammar")]
-    // O = Horno/Cocina, M = Mesa, H = Silla, D = Decoración
     [SerializeField] private string restStartProduction = "OMT";
     [SerializeField] private string restTaskSymbol = "T";
     [SerializeField] private List<string> restTaskProductions = new List<string>() { "MMT", "MHT", "DT" };
@@ -43,7 +42,7 @@ public class MissionGenerator : MonoBehaviour
     /// </summary>
     public string GenerateMissionString(MissionContext context)
     {
-        // 1. Seleccionar la gramática correcta según el contexto
+        // Seleccionar la gramática correcta según el contexto
         string startProduction = context == MissionContext.City ? cityStartProduction : restStartProduction;
         string taskSymbol = context == MissionContext.City ? cityTaskSymbol : restTaskSymbol;
         List<string> taskProductions = context == MissionContext.City ? cityTaskProductions : restTaskProductions;
@@ -54,7 +53,7 @@ public class MissionGenerator : MonoBehaviour
         string current = startProduction;
         System.Random rand = new System.Random(seed);
 
-        // 2. Proceso de expansión (Derivación)
+        // Proceso de expansión (Derivación)
         for (int i = 0; i < expansionSteps; i++)
         {
             StringBuilder mission = new StringBuilder();
@@ -78,7 +77,7 @@ public class MissionGenerator : MonoBehaviour
             if (!replaced) break;
         }
 
-        // 3. Reemplazo terminal de los símbolos de tarea (T) restantes
+        // Reemplazo terminal de los símbolos de tarea (T) restantes
         StringBuilder terminalMission = new StringBuilder();
         foreach (char symbol in current)
         {

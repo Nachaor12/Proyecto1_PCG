@@ -90,7 +90,7 @@ public class CityController : MonoBehaviour
         int resolution = (limitesMaximos.x - limitesMinimos.x) + 1;
         float[,] noiseMap = ValueNoise.GenerateValueNoiseMap(resolution, latticeSpacing, seed, mode);
 
-        // Rellenar TODO el mapa sobrante con edificios usando los límites
+        // Rellenar el mapa sobrante con edificios usando los límites
         visualizer.PaintBuildings(totalOccupiedSpace, noiseMap, limitesMinimos, limitesMaximos, resolution);
 
         // Nuevo visualizer para dibujar edificios, quitar el de arriba 

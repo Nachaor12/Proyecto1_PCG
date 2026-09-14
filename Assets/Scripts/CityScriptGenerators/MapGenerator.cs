@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 
@@ -54,7 +53,6 @@ public class MapGenerator : MonoBehaviour
     [SerializeField] private Tile restaurantKitchenTile;
     [SerializeField] private Tile restaurantChairTile;
     [SerializeField] private Tile restauranDecoTile;
-
 
     //Para los edificios
     public enum BuildingHeight
@@ -461,7 +459,7 @@ public class MapGenerator : MonoBehaviour
                     else
                         tileToSet = roofBuilding;
                 }
-                // --- CAPA DE FACHADA / PARED (Filas inferiores) ---
+                // pared (Filas inferiores) 
                 else
                 {
                     // Puerta de entrada centrada en la base

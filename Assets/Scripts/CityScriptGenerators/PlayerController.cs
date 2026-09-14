@@ -7,7 +7,7 @@ public class PlayerController : MonoBehaviour
     private HashSet<Vector2Int> validTiles;
     private Vector2Int currentGridPosition;
 
-    ///Variables de movimiento
+    //Variables de movimiento
     [SerializeField] private float velocity = 5;
     private float MovePlayerAxisH = 1;
     private float MovePlayerAxisV = 0;
@@ -30,18 +30,6 @@ public class PlayerController : MonoBehaviour
 
         SecondMovementHorizontal(MovePlayerAxisH);
         SecondMovementVertical(MovePlayerAxisV);
-    }
-
-    private void TryMove(Vector2Int direction)
-    {
-        Vector2Int targetPos = currentGridPosition + direction;
-
-        // Validar si la casilla destino existe en las calles o aceras
-        if (validTiles != null && validTiles.Contains(targetPos))
-        {
-            currentGridPosition = targetPos;
-            UpdateVisualPosition();
-        }
     }
 
     private void UpdateVisualPosition()
